@@ -3,7 +3,7 @@ set -e
 
 # 1. Update packages & install dependencies
 sudo yum update -y
-sudo yum install -y git curl gcc-c++ make
+sudo yum install -y git
 
 # 2. Clone repo
 if [ ! -d /home/ec2-user/pokemon-app ]; then
@@ -25,5 +25,4 @@ sudo npm install --no-bin-links express mysql2 cors
 sudo -u ec2-user pm2 start index.js --name "pokemon-api"
 sudo -u ec2-user pm2 save
 
-# 7. Configure pm2 to start on VM boot
-sudo pm2 startup systemd -u ec2-user --hp /home/ec2-user
+
