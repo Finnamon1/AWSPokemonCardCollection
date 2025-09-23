@@ -1,6 +1,3 @@
-#!/usr/bin/env bash
-set -e
-
 # 1. Update packages & install dependencies
 sudo yum update -y
 sudo yum install -y git
