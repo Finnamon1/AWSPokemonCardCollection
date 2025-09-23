@@ -1,0 +1,14 @@
+{
+    "name": "pokemon-ui",
+    "version": "1.0.0",
+    "description": "Pokemon card collection frontend",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "author": "Your Name",
+    "license": "MIT",
+    "dependencies": {
+        "express": "^5.1.0"
+    }
+}

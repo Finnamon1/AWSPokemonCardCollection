@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokémon Card Collection</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background-color: #ffcb05;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: relative;
+      display: flex;
+      justify-content: center;
+      /* Center title */
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      color: #3b4cca;
+      flex-grow: 1;
+      text-align: center;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 0.5rem;
+      /* space between buttons */
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .nav-btn {
+      padding: 8px 16px;
+      background-color: #3b4cca;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .nav-btn:hover {
+      background-color: #2a3695;
+    }
+
+    .logout-btn {
+      background-color: #d9534f;
+      /* red logout button */
+    }
+
+    .logout-btn:hover {
+      background-color: #c9302c;
+    }
+
+
+    #cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+      padding: 1rem;
+      display: none;
+      /* Hidden until logged in */
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+    }
+
+    .card img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .info {
+      padding: 0.5rem;
+    }
+
+    .info h2 {
+      margin: 0.5rem 0 0.25rem 0;
+      font-size: 1rem;
+      color: #3b4cca;
+    }
+
+    .info p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .error {
+      text-align: center;
+      color: red;
+      font-weight: bold;
+      margin-top: 2rem;
+    }
+
+    /* Login/Register Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content input {
+      width: 90%;
+      padding: 8px;
+      margin: 8px 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .modal-content button {
+      padding: 8px 16px;
+      background-color: #3b4cca;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .modal-content button:hover {
+      background-color: #2a3695;
+    }
+
+    .toggle-link {
+      color: #3b4cca;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.9rem;
+      display: block;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Pokémon Card Collection</h1>
+    <div class="header-buttons">
+      <button onclick="window.location.href='mycollection.html'" class="nav-btn">
+        My Collection
+      </button>
+      <button id="logoutBtn" onclick="logout()" class="nav-btn logout-btn" style="display:none;">
+        Logout
+      </button>
+    </div>
+
+  </header>
+
+
+  <!-- Login/Register Modal -->
+  <div id="loginModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Login</h2>
+      <input type="text" id="username" placeholder="Username"><br>
+      <input type="password" id="password" placeholder="Password"><br>
+      <input type="email" id="email" placeholder="Email" style="display:none;"><br>
+      <button id="submitBtn" onclick="login()">Login</button>
+      <p id="loginError" style="color:red; display:none;">Error: Invalid credentials</p>
+      <span id="toggleForm" class="toggle-link" onclick="toggleForm()">Don't have an account? Register</span>
+    </div>
+  </div>
+
+  <div id="cards-container">
+    <!-- Cards will load here -->
+  </div>
+
+  <script>
+    let loggedIn = false;
+    let isLogin = true;
+
+    function toggleForm() {
+      isLogin = !isLogin;
+      document.getElementById('modalTitle').innerText = isLogin ? 'Login' : 'Register';
+      document.getElementById('submitBtn').innerText = isLogin ? 'Login' : 'Register';
+      document.getElementById('email').style.display = isLogin ? 'none' : 'block';
+      document.getElementById('toggleForm').innerText = isLogin ? "Don't have an account? Register" : "Already have an account? Login";
+      document.getElementById('loginError').style.display = 'none';
+    }
+
+    async function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const email = document.getElementById('email').value;
+
+  try {
+    const url = isLogin
+      ? 'http://192.168.56.11:5000/login'
+      : 'http://192.168.56.11:5000/users';
+
+    let bodyData;
+
+    if (isLogin) {
+      // Login
+      bodyData = { username, password };
+    } else {
+      const user_id = Math.floor(Math.random() * 900000) + 100000; 
+      bodyData = { user_id, username, email, password };
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bodyData)
+    });
+
+    const data = await res.json();
+    console.log("Server response:", data);
+
+    if (res.ok) {
+      // Use the generated or returned user ID
+      const userId = isLogin ? data.user_id : bodyData.user_id;
+
+      sessionStorage.setItem('userId', userId);
+
+      loggedIn = true;
+      document.getElementById('loginModal').style.display = 'none';
+      document.getElementById('cards-container').style.display = 'grid';
+      document.getElementById('logoutBtn').style.display = 'inline-block';
+      loadCards();
+    } else {
+      document.getElementById('loginError').innerText = data.error || 'Login/Register failed';
+      document.getElementById('loginError').style.display = 'block';
+    }
+  } catch (err) {
+    console.error("Login/Register error:", err);
+    document.getElementById('loginError').innerText = err.message || 'Network error';
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+
+
+
+    function logout() {
+      sessionStorage.removeItem('userId');
+      loggedIn = false;
+      document.getElementById('logoutBtn').style.display = 'none';
+      document.getElementById('cards-container').style.display = 'none';
+      document.getElementById('loginModal').style.display = 'block';
+    }
+
+    function generateUserId() {
+      return 'user_' + Math.floor(Math.random() * 1e6);
+    }
+
+
+    async function loadCards() {
+      try {
+        const response = await fetch('http://192.168.56.11:5000/cards');
+        const cards = await response.json();
+        const container = document.getElementById('cards-container');
+
+        if (!cards || cards.length === 0) {
+          container.innerHTML = "<p class='error'>No cards found in the database.</p>";
+          return;
+        }
+
+        container.innerHTML = '';
+        const userId = Number(sessionStorage.getItem('userId'));
+
+        cards.forEach(card => {
+          const cardEl = document.createElement('div');
+          cardEl.className = 'card';
+          cardEl.innerHTML = `
+            <a href="card.html?number=${card.number_in_set}">
+              <img src="${card.image_url}" alt="${card.name}">
+              <div class="info">
+                <h2>${card.name}</h2>
+                <p>#${card.number_in_set}</p>
+              </div>
+            </a>
+            <button onclick="addCard(${card.card_id})">Add to Collection</button>
+          `;
+          container.appendChild(cardEl);
+        });
+
+      } catch (err) {
+        console.error('Error loading cards:', err);
+        document.getElementById('cards-container').innerHTML = "<p class='error'>Failed to load cards. Make sure the API VM is running on port 5000.</p>";
+      }
+    }
+
+    async function addCard(cardId) {
+      const userId = sessionStorage.getItem('userId');
+      if (!userId) return alert("You must be logged in to add cards.");
+
+      try {
+        await fetch('http://192.168.56.11:5000/addcard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            card_id: cardId,
+            quantity: 1,
+            condition: 'Good',
+            is_holo: false
+          })
+        });
+        alert('Card added to your collection!');
+      } catch (err) {
+        console.error('Add card error:', err);
+        alert('Failed to add card.');
+      }
+    }
+
+    // ✅ Show login modal only if not logged in
+    window.onload = () => {
+      const userId = sessionStorage.getItem('userId');
+      if (userId) {
+        loggedIn = true;
+        document.getElementById('loginModal').style.display = 'none';
+        document.getElementById('cards-container').style.display = 'grid';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+        loadCards();
+      } else {
+        document.getElementById('loginModal').style.display = 'block';
+      }
+    };
+  </script>
+
+</body>
+
+</html>
