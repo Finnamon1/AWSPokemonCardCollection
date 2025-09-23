@@ -3,34 +3,34 @@ set -e
 
 # 1. Update packages
 sudo yum update -y
-sudo yum install -y wget git
+sudo yum install -y git docker
 
-# 2. Install MySQL 8 from Amazon repos
-sudo amazon-linux-extras enable mysql8.0
-sudo yum install -y mysql mysql-server
+# 2. Start Docker service
+sudo systemctl enable docker
+sudo systemctl start docker
 
-# 3. Enable and start MySQL
-sudo systemctl enable mysqld
-sudo systemctl start mysqld
-
-# 4. Clone repo to get schema.sql
-if [ ! -d /home/ec2-user/pokemon-app ]; then
-  git clone https://github.com/Finnamon1/AWSPokemonCardCollection.git /home/ec2-user/pokemon-app
+# 3. Clone repo to get schema.sql
+REPO_DIR="/home/ec2-user/pokemon-app"
+if [ ! -d "$REPO_DIR" ]; then
+  git clone https://github.com/Finnamon1/AWSPokemonCardCollection.git "$REPO_DIR"
 fi
 
-# 5. Configure MySQL for external access
-sudo sed -i "s/^bind-address.*/bind-address = 0.0.0.0/" /etc/my.cnf
-sudo systemctl restart mysqld
+# 4. Set MySQL environment variables
+MYSQL_ROOT_PASSWORD="rootpassword"
+MYSQL_USER="pokeuser"
+MYSQL_PASSWORD="pokepass"
+MYSQL_DATABASE="pokemon_db"
 
-# 6. Set root password & create app user
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'rootpassword'; FLUSH PRIVILEGES;"
-sudo mysql -u root -prootpassword -e "CREATE USER IF NOT EXISTS 'pokeuser'@'%' IDENTIFIED BY 'pokepass';"
-sudo mysql -u root -prootpassword -e "GRANT ALL PRIVILEGES ON *.* TO 'pokeuser'@'%'; FLUSH PRIVILEGES;"
+# 5. Pull and run MySQL Docker container
+docker pull mysql:8.0
+docker run -d \
+  --name mysql-server \
+  -e MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD" \
+  -e MYSQL_DATABASE="$MYSQL_DATABASE" \
+  -e MYSQL_USER="$MYSQL_USER" \
+  -e MYSQL_PASSWORD="$MYSQL_PASSWORD" \
+  -p 3306:3306 \
+  -v "$REPO_DIR/database/schema.sql":/docker-entrypoint-initdb.d/schema.sql:ro \
+  mysql:8.0
 
-# 7. Apply schema
-if [ -f /home/ec2-user/pokemon-app/database/schema.sql ]; then
-  sudo mysql -u root -prootpassword < /home/ec2-user/pokemon-app/database/schema.sql
-else
-  echo "⚠️ schema.sql not found in /home/ec2-user/pokemon-app/database/"
-fi
-echo "✅ MySQL setup complete."
+echo "✅ MySQL Docker container started with schema applied."
