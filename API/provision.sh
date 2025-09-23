@@ -1,34 +1,29 @@
 #!/usr/bin/env bash
 set -e
 
+# 1. Update packages & install dependencies
+sudo yum update -y
+sudo yum install -y git curl gcc-c++ make
 
+# 2. Clone repo
+if [ ! -d /home/ec2-user/pokemon-app ]; then
+  git clone https://github.com/Finnamon1/AWSPokemonCardCollection.git /home/ec2-user/pokemon-app
+fi
 
-# 1. Update & install dependencies
-sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
-sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
-sudo sed -i 's|http://archive.ubuntu.com/ubuntu|http://nz.archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
-sudo apt-get -o Acquire::ForceIPv4=true update #weird IPv4 & 6 stuff above was because kept getting netowrk errors that only went away when doing this for API so am keeping it.
-sudo apt-get -o Acquire::ForceIPv4=true upgrade -y
-sudo apt-get install -y curl build-essential
+# 3. Install Node.js 18 & npm
+curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+sudo yum install -y nodejs
 
-
-
-
-# 2. Install Node.js 18 & npm
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo bash -
-sudo apt-get install -y nodejs
-
-# 3. Install pm2 globally
+# 4. Install pm2 globally
 sudo npm install -g pm2
 
-# 4. Install API dependencies
-cd /vagrant/API
+# 5. Install API dependencies
+cd /home/ec2-user/pokemon-app/API
 sudo npm install --no-bin-links express mysql2 cors
 
-# 5. Start API with pm2
-sudo -u vagrant pm2 start /vagrant/API/index.js --name "pokemon-api"
-sudo -u vagrant pm2 save
+# 6. Start API with pm2
+sudo -u ec2-user pm2 start index.js --name "pokemon-api"
+sudo -u ec2-user pm2 save
 
-# 6. Configure pm2 to start on VM boot
-
-sudo pm2 startup systemd -u vagrant --hp /home/vagrant
+# 7. Configure pm2 to start on VM boot
+sudo pm2 startup systemd -u ec2-user --hp /home/ec2-user

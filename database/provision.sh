@@ -1,26 +1,38 @@
 #!/usr/bin/env bash
 set -e
 
-# 1 Update package list
-sudo apt-get update
+# 1. Update packages
+sudo yum update -y
+sudo yum install -y wget git
 
-# 2 Install MySQL server and client
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server mysql-client
+# 2. Add MySQL 8 repo
+wget https://dev.mysql.com/get/mysql80-community-release-el7-7.noarch.rpm
+sudo rpm -Uvh mysql80-community-release-el7-7.noarch.rpm
 
-# 3 Configure MySQL to accept external connections
-sudo sed -i "s/^bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
-sudo systemctl restart mysql
+# 3. Install MySQL server & client
+sudo yum install -y mysql-community-server
 
-# 4 Secure root user with password authentication
+# 4. Enable and start MySQL
+sudo systemctl enable mysqld
+sudo systemctl start mysqld
+
+# 5. Clone repo to get schema.sql
+if [ ! -d /home/ec2-user/pokemon-app ]; then
+  git clone https://github.com/Finnamon1/AWSPokemonCardCollection.git /home/ec2-user/pokemon-app
+fi
+
+# 6. Configure MySQL for external access
+sudo sed -i "s/^bind-address.*/bind-address = 0.0.0.0/" /etc/my.cnf
+sudo systemctl restart mysqld
+
+# 7. Set root password & create app user
 sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'rootpassword'; FLUSH PRIVILEGES;"
-
-# 5 Create dedicated app user
 sudo mysql -u root -prootpassword -e "CREATE USER IF NOT EXISTS 'pokeuser'@'%' IDENTIFIED BY 'pokepass';"
 sudo mysql -u root -prootpassword -e "GRANT ALL PRIVILEGES ON *.* TO 'pokeuser'@'%'; FLUSH PRIVILEGES;"
 
-# 6 Apply schema
-if [ -f /vagrant/database/schema.sql ]; then
-  sudo mysql -u root -prootpassword < /vagrant/database/schema.sql
+# 8. Apply schema
+if [ -f /home/ec2-user/pokemon-app/database/schema.sql ]; then
+  sudo mysql -u root -prootpassword < /home/ec2-user/pokemon-app/database/schema.sql
 else
-  echo "⚠️ schema.sql not found in /vagrant/database/"
+  echo "⚠️ schema.sql not found in /home/ec2-user/pokemon-app/database/"
 fi
