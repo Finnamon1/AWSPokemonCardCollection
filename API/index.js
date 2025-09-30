@@ -8,7 +8,7 @@ app.use(cors());
 
 // DB pool
 const pool = mysql.createPool({
-  host: "192.168.56.10", 
+  host: "52.72.198.145", 
   user: "pokeuser",
   password: "pokepass",
   database: "pokemon"
