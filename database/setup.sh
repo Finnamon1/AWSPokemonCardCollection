@@ -53,7 +53,15 @@ sudo docker run -d \
   --default-authentication-plugin=mysql_native_password \
   --bind-address=0.0.0.0
 
-echo "✅ MySQL Docker container started with database '$MYSQL_DATABASE' and schema applied."
+# 7. Allow pokeuser to connect from other EC2 instances in VPC
+echo "🛡 Configuring MySQL user access for private IP connections..."
+sudo docker exec -i mysql-server mysql -u root -p"$MYSQL_ROOT_PASSWORD" <<EOF
+CREATE USER IF NOT EXISTS 'pokeuser'@'172.31.%.%' IDENTIFIED BY '$MYSQL_PASSWORD';
+GRANT ALL PRIVILEGES ON $MYSQL_DATABASE.* TO 'pokeuser'@'172.31.%.%';
+FLUSH PRIVILEGES;
+EOF
+
+echo "✅ MySQL Docker container started with database '$MYSQL_DATABASE' and user access configured for VPC."
 
 # Optional: Ensure container is running
 sudo docker start mysql-server
