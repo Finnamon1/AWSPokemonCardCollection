@@ -7,7 +7,7 @@ const PORT = 80;
 // Serve static files from current directory
 app.use(express.static(__dirname));
 
-app.get('/:any(*)', (req, res) => {
+app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
