@@ -16,7 +16,7 @@ fi
 MYSQL_ROOT_PASSWORD="rootpassword"
 MYSQL_USER="pokeuser"
 MYSQL_PASSWORD="pokepass"
-MYSQL_DATABASE="pokemon_db"
+MYSQL_DATABASE="pokemon"
 
 # 5. Pull and run MySQL Docker container
 sudo docker pull mysql:8.0
