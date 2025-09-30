@@ -40,6 +40,5 @@ sudo docker run -d \
 
 echo "✅ MySQL Docker container started with database '$MYSQL_DATABASE' and schema applied."
 
-# 7. Show container logs (to verify schema execution)
-sleep 5
-sudo docker logs mysql-server | grep docker-entrypoint-initdb.d || true
+sudo docker start mysql-server
+echo "✅ MySQL Docker container is running."
