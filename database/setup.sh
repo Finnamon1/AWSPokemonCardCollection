@@ -1,8 +1,11 @@
-# 1. Update packages
+#!/usr/bin/env bash
+set -e
+
+# 1. Update packages and install Docker + Git
 sudo yum update -y
 sudo yum install -y git docker
 
-# 2. Start Docker service
+# 2. Enable and start Docker service
 sudo systemctl enable docker
 sudo systemctl start docker
 
@@ -12,13 +15,18 @@ if [ ! -d "$REPO_DIR" ]; then
   git clone https://github.com/Finnamon1/AWSPokemonCardCollection.git "$REPO_DIR"
 fi
 
-# 4. Set MySQL environment variables
+# 4. MySQL environment variables
 MYSQL_ROOT_PASSWORD="rootpassword"
 MYSQL_USER="pokeuser"
 MYSQL_PASSWORD="pokepass"
-MYSQL_DATABASE="pokemon"
+MYSQL_DATABASE="pokemon"  
 
-# 5. Pull and run MySQL Docker container
+# 5. Clean up old container if it exists
+if [ "$(sudo docker ps -aq -f name=mysql-server)" ]; then
+  sudo docker rm -f mysql-server
+fi
+
+# 6. Pull and run MySQL container with schema auto-loaded
 sudo docker pull mysql:8.0
 sudo docker run -d \
   --name mysql-server \
@@ -27,7 +35,11 @@ sudo docker run -d \
   -e MYSQL_USER="$MYSQL_USER" \
   -e MYSQL_PASSWORD="$MYSQL_PASSWORD" \
   -p 3306:3306 \
-  -v "$REPO_DIR/database/schema.sql":/docker-entrypoint-initdb.d/schema.sql:ro \
+  -v "$REPO_DIR/database":/docker-entrypoint-initdb.d:ro \
   mysql:8.0
 
-echo "✅ MySQL Docker container started with schema applied."
+echo "✅ MySQL Docker container started with database '$MYSQL_DATABASE' and schema applied."
+
+# 7. Show container logs (to verify schema execution)
+sleep 5
+sudo docker logs mysql-server | grep docker-entrypoint-initdb.d || true
