@@ -25,7 +25,7 @@ sudo yum install -y nodejs
 # 4. Install Node dependencies
 # -------------------------
 cd "$APP_DIR"
-npm install
+npm install express
 
 # -------------------------
 # 5. Instructions to start server
