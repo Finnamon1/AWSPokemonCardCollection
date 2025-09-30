@@ -36,7 +36,7 @@ sudo docker run -d \
   -e MYSQL_PASSWORD="$MYSQL_PASSWORD" \
   -p 3306:3306 \
   -v "$REPO_DIR/database":/docker-entrypoint-initdb.d:ro \
-  mysql:8.0
+  mysql:8.0 --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0
 
 echo "✅ MySQL Docker container started with database '$MYSQL_DATABASE' and schema applied."
 
