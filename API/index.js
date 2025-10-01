@@ -8,10 +8,10 @@ app.use(cors());
 
 // DB pool
 const pool = mysql.createPool({
-  host: "172.31.20.15", 
+  host: "my-db-pokemon.clwoquq0kjv9.us-east-1.rds.amazonaws.com", 
   port: 3306,
-  user: "pokeuser",
-  password: "pokepass",
+  user: "admin",
+  password: "password",
   database: "pokemon"
 });
 
