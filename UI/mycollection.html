@@ -114,7 +114,7 @@
       }
 
       try {
-        const response = await fetch(`http://23.23.58.83:5000/users/${userId}/cards`);
+        const response = await fetch(`http://ec2-54-196-145-189.compute-1.amazonaws.com:5000/users/${userId}/cards`);
         if (!response.ok) throw new Error("Failed to fetch user cards");
         const cards = await response.json();
         const container = document.getElementById('cards-container');
