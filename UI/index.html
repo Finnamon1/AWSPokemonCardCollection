@@ -220,24 +220,46 @@
       document.getElementById('loginModal').style.display = 'block';
     }
 
-    function loadCards() {
-      const container = document.getElementById('cards-container');
-      container.innerHTML = '';
-
-      const baseUrl = "https://pokemoncardimagesproject.s3.us-east-1.amazonaws.com/";
-
-      for (let i = 1; i <= 102; i++) {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <img src="${baseUrl}${i}.jpg" alt="Pokémon Card ${i}">
-          <div class="info">
-            <h2>Card #${i}</h2>
-          </div>
-        `;
-        container.appendChild(card);
+    async function loadCards() {
+      try {
+        const response = await fetch('http://ec2-54-243-17-92.compute-1.amazonaws.com:5000/cards');
+        const cards = await response.json();
+        const container = document.getElementById('cards-container');
+      
+        if (!cards || cards.length === 0) {
+          container.innerHTML = "<p class='error'>No cards found in the database.</p>";
+          return;
+        }
+      
+        container.innerHTML = '';
+        const userId = Number(sessionStorage.getItem('userId'));
+      
+        cards.forEach(card => {
+          // 🟡 Use your S3 bucket image
+          const imageUrl = `https://pokemoncardimagesproject.s3.us-east-1.amazonaws.com/${card.number_in_set}.jpg`;
+        
+          const cardEl = document.createElement('div');
+          cardEl.className = 'card';
+          cardEl.innerHTML = `
+            <a href="card.html?number=${card.number_in_set}">
+              <img src="${imageUrl}" alt="${card.name}">
+              <div class="info">
+                <h2>${card.name}</h2>
+                <p>#${card.number_in_set}</p>
+              </div>
+            </a>
+            <button onclick="addCard(${card.card_id})">Add to Collection</button>
+          `;
+          container.appendChild(cardEl);
+        });
+      
+      } catch (err) {
+        console.error('Error loading cards:', err);
+        document.getElementById('cards-container').innerHTML =
+          "<p class='error'>Failed to load cards. Make sure the API VM is running on port 5000.</p>";
       }
-    }
+  }   
+
 
     window.onload = () => {
       const userId = sessionStorage.getItem('userId');
