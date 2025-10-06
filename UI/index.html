@@ -223,7 +223,7 @@
 
     const data = await res.json();
     // Save real user ID from backend
-    sessionStorage.setItem('userId', data.userId); // <-- important!
+    sessionStorage.setItem('userId', data.user_id); // <-- important!
     loggedIn = true;
     document.getElementById('loginModal').style.display = 'none';
     document.getElementById('cards-container').style.display = 'grid';
