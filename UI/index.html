@@ -236,8 +236,9 @@
       
         cards.forEach(card => {
           // 🟡 Use your S3 bucket image
-          const imageUrl = `https://pokemoncardimagesproject.s3.us-east-1.amazonaws.com/${card.number_in_set}.jpg`;
-        
+          const cardNumber = card.number_in_set.imagePath.split('/').pop();
+          const imageUrl = `https://pokemoncardimagesproject.s3.us-east-1.amazonaws.com/${cardNumber}.jpg`;
+          
           const cardEl = document.createElement('div');
           cardEl.className = 'card';
           cardEl.innerHTML = `
