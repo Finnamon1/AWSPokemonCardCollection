@@ -220,6 +220,29 @@
       document.getElementById('loginModal').style.display = 'block';
     }
 
+    async function addCard(cardId) {
+      const userId = sessionStorage.getItem('userId');
+      if (!userId) return alert("You must be logged in to add cards.");
+
+      try {
+        await fetch('http://ec2-54-243-17-92.compute-1.amazonaws.com:5000/addcard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            card_id: cardId,
+            quantity: 1,
+            condition: 'Good',
+            is_holo: false
+          })
+        });
+        alert('Card added to your collection!');
+      } catch (err) {
+        console.error('Add card error:', err);
+        alert('Failed to add card.');
+      }
+    }
+
     async function loadCards() {
       try {
         const response = await fetch('http://ec2-54-243-17-92.compute-1.amazonaws.com:5000/cards');
