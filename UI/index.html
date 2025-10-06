@@ -207,30 +207,57 @@
     async function login() {
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
+  const email = document.getElementById('email').value;
+
+  // Validate required fields
+  if (!username || !password) {
+    document.getElementById('loginError').innerText = 'Username and password are required';
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+
+  if (!isLogin && !email) {
+    document.getElementById('loginError').innerText = 'Email is required for registration';
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
 
   try {
-    const res = await fetch('http://ec2-54-243-17-92.compute-1.amazonaws.com:5000/login', {
+    const endpoint = isLogin ? '/login' : '/register';
+    const body = isLogin 
+      ? { username, password }
+      : { username, email, password };
+
+    const res = await fetch(`http://ec2-54-243-17-92.compute-1.amazonaws.com:5000${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify(body)
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      document.getElementById('loginError').innerText = 'Invalid credentials';
+      document.getElementById('loginError').innerText = data.error || 'Operation failed';
       document.getElementById('loginError').style.display = 'block';
       return;
     }
 
-    const data = await res.json();
     // Save real user ID from backend
-    sessionStorage.setItem('userId', data.user_id); // <-- important!
+    sessionStorage.setItem('userId', data.user.user_id);
     loggedIn = true;
     document.getElementById('loginModal').style.display = 'none';
     document.getElementById('cards-container').style.display = 'grid';
     document.getElementById('logoutBtn').style.display = 'inline-block';
+    
+    // Clear form fields
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    
     loadCards();
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Operation error:', err);
     document.getElementById('loginError').innerText = 'Network error';
     document.getElementById('loginError').style.display = 'block';
   }

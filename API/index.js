@@ -26,6 +26,44 @@ app.get("/cards", async (req, res) => {
   }
 });
 
+// Register new user
+app.post("/register", async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Validate required fields
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: "Username, email, and password are required" });
+    }
+
+    // Check if username already exists
+    const [existingUsers] = await pool.query(
+      "SELECT user_id FROM users WHERE username = ? OR email = ?",
+      [username, email]
+    );
+
+    if (existingUsers.length > 0) {
+      return res.status(409).json({ error: "Username or email already exists" });
+    }
+
+    // Insert new user
+    const [result] = await pool.query(
+      "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+      [username, email, password]
+    );
+
+    const userId = result.insertId;
+
+    res.status(201).json({ 
+      message: "User registered successfully", 
+      user: { user_id: userId, username, email } 
+    });
+  } catch (err) {
+    console.error("Registration error:", err);
+    res.status(500).json({ error: "Registration failed", details: err.message || err.sqlMessage });
+  }
+});
+
 app.post('/users', async (req, res) => {
   const { user_id, username, email, password } = req.body;
 
