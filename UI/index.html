@@ -205,13 +205,37 @@
     }
 
     async function login() {
-      // simplified login for now
-      loggedIn = true;
-      document.getElementById('loginModal').style.display = 'none';
-      document.getElementById('cards-container').style.display = 'grid';
-      document.getElementById('logoutBtn').style.display = 'inline-block';
-      loadCards();
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  try {
+    const res = await fetch('http://ec2-54-243-17-92.compute-1.amazonaws.com:5000/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (!res.ok) {
+      document.getElementById('loginError').innerText = 'Invalid credentials';
+      document.getElementById('loginError').style.display = 'block';
+      return;
     }
+
+    const data = await res.json();
+    // Save real user ID from backend
+    sessionStorage.setItem('userId', data.userId); // <-- important!
+    loggedIn = true;
+    document.getElementById('loginModal').style.display = 'none';
+    document.getElementById('cards-container').style.display = 'grid';
+    document.getElementById('logoutBtn').style.display = 'inline-block';
+    loadCards();
+  } catch (err) {
+    console.error('Login error:', err);
+    document.getElementById('loginError').innerText = 'Network error';
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
 
     function logout() {
       loggedIn = false;
