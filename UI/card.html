@@ -249,25 +249,29 @@
     }
 
     async function loadCards() {
-      const userId = sessionStorage.getItem('userId');
-      if (!userId) return;
+  const userId = sessionStorage.getItem('userId');
+  if (!userId) return;
 
-      try {
-        const response = await fetch(`${apiBase}/cards`);
-        const cards = await response.json();
-        const container = document.getElementById('cards-container');
-        container.innerHTML = '';
+  try {
+    const response = await fetch(`${apiBase}/cards`);
+    const cards = await response.json();
+    const container = document.getElementById('cards-container');
+    container.innerHTML = '';
 
-        if (!cards || cards.length === 0) {
-          container.innerHTML = "<p class='error'>No cards found in the database.</p>";
-          return;
-        }
+    if (!cards || cards.length === 0) {
+      container.innerHTML = "<p class='error'>No cards found in the database.</p>";
+      return;
+    }
 
-        cards.forEach(card => {
-          const cardEl = document.createElement('div');
-          cardEl.className = 'card';
-          cardEl.innerHTML = `
-        <img src="${card.image_url}" alt="${card.name}">
+    cards.forEach(card => {
+      // Use the first number in number_in_set for S3 image URL
+      const cardNumber = card.number_in_set.split('/')[0];
+      const imageUrl = `https://pokemoncardimagesproject.s3.us-east-1.amazonaws.com/${cardNumber}.jpg`;
+
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+      cardEl.innerHTML = `
+        <img src="${imageUrl}" alt="${card.name}">
         <div class="info">
           <h2>${card.name}</h2>
           <p>#${card.number_in_set} | ${card.rarity}</p>
@@ -283,14 +287,13 @@
         <button onclick="addCard(${card.card_id})">Add</button>
         <button onclick="removeCard(${card.card_id})">Remove</button>
       `;
-          container.appendChild(cardEl);
-        });
-      } catch (err) {
-        console.error('Error loading cards:', err);
-        document.getElementById('cards-container').innerHTML =
-          "<p class='error'>Failed to load cards. Make sure the API VM is running.</p>";
-      }
-    }
+      container.appendChild(cardEl);
+    });
+  } catch (err) {
+    console.error('Error loading cards:', err);
+    container.innerHTML = "<p class='error'>Failed to load cards. Make sure the API VM is running.</p>";
+  }
+}
 
     async function addCard(cardId) {
       const userId = sessionStorage.getItem('userId');
